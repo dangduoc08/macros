@@ -1,0 +1,16 @@
+{
+  "verbose": false,
+  "ignore": [
+    "target/**/*",
+    "Cargo.lock",
+    ".git",
+    ".gitignore",
+    "nodemon.json",
+    "README.md"
+  ],
+  "watch": [
+    "src/**/*"
+  ],
+  "exec": "cargo run --manifest-path {{filename}}/Cargo.toml",
+  "ext": "rs"
+}
