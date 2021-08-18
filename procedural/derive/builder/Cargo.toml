@@ -1,0 +1,12 @@
+[package]
+authors = ["Đăng Được <duoc200894@gmail.com>"]
+edition = "2018"
+name = "derive_macro"
+version = "0.1.0"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0"
+syn = {version = "1.0", features = ["extra-traits"]}
