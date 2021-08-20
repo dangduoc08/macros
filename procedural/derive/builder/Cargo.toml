@@ -1,7 +1,7 @@
 [package]
 authors = ["Đăng Được <duoc200894@gmail.com>"]
 edition = "2018"
-name = "derive_macro"
+name = "builder"
 version = "0.1.0"
 
 [lib]
