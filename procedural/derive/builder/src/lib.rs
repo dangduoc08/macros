@@ -64,6 +64,10 @@ pub fn builder_macro(input: TokenStream) -> TokenStream {
       pub fn current_dir(&mut self, new_dir: Option<String>) {
         self.current_dir = new_dir
       }
+
+      pub fn build(&self) -> Result::<&Self, String> {
+        Ok(&self)
+      }
     }
   };
 
