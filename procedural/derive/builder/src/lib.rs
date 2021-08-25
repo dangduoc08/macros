@@ -10,7 +10,7 @@ pub fn builder_macro(input: TokenStream) -> TokenStream {
   let parsed_input: DeriveInput = parse::<DeriveInput>(input).unwrap();
 
   // Get struct fields from derived struct
-  let original_struct_fields = if let Data::Struct(DataStruct {
+  let _original_struct_fields = if let Data::Struct(DataStruct {
     fields: Fields::Named(FieldsNamed { ref named, .. }),
     ..
   }) = parsed_input.data
@@ -34,39 +34,52 @@ pub fn builder_macro(input: TokenStream) -> TokenStream {
   let expanded = quote! {
     #[derive(Debug)]
     pub struct #new_struct_name {
-      #original_struct_fields
+      // #original_struct_fields
+      pub executable: Option::<String>,
+      pub args: Option::<Vec::<String>>,
+      pub env: Option::<Vec::<&'static str>>,
+      pub current_dir: Option::<Option::<String>>,
     }
 
     impl #original_struct_name {
       pub fn builder() -> #new_struct_name {
         #new_struct_name{
-          executable: String::from(""),
-          args: vec![String::from("")],
-          env: vec![""],
-          current_dir: Some(String::from("")),
+          executable: None,
+          args: None,
+          env: None,
+          current_dir: None,
         }
       }
     }
 
     impl #new_struct_name {
-      pub fn executable(&mut self, new_executable: String) {
-        self.executable = new_executable
+      pub fn executable(&mut self, new_executable: String) -> &mut Self {
+        self.executable = Some(new_executable);
+        self
       }
 
-      pub fn args(&mut self, new_args: Vec::<String>) {
-        self.args = new_args
+      pub fn args(&mut self, new_args: Vec::<String>) -> &mut Self {
+        self.args = Some(new_args);
+        self
       }
 
-      pub fn env(&mut self, new_env: Vec<&'static str>) {
-        self.env = new_env
+      pub fn env(&mut self, new_env: Vec::<&'static str>) -> &mut Self {
+        self.env = Some(new_env);
+        self
       }
 
-      pub fn current_dir(&mut self, new_dir: Option<String>) {
-        self.current_dir = new_dir
+      pub fn current_dir(&mut self, new_dir: Option::<String>) -> &mut Self {
+        self.current_dir = Some(new_dir);
+        self
       }
 
-      pub fn build(&self) -> Result::<&Self, String> {
-        Ok(&self)
+      pub fn build(&self) -> Result::<#original_struct_name, String> {
+        Ok(#original_struct_name{
+          executable: self.executable.clone().ok_or("failed to get executable").unwrap(),
+          args: self.args.clone().ok_or("failed to get args").unwrap(),
+          env: self.env.clone().ok_or("failed to get env").unwrap(),
+          current_dir: self.current_dir.clone().ok_or("failed to get current_dir").unwrap(),
+        })
       }
     }
   };
