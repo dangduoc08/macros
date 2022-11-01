@@ -1,6 +1,6 @@
 use builder::Builder;
 
-#[derive(Builder)]
+#[derive(Builder, Debug)]
 pub struct Command {
   pub executable: String,
   pub args: Vec<String>,

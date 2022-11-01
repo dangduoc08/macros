@@ -10,7 +10,7 @@ pub fn builder_macro(input: TokenStream) -> TokenStream {
   let parsed_input: DeriveInput = parse::<DeriveInput>(input).unwrap();
 
   // Get struct fields from derived struct
-  let _original_struct_fields = if let Data::Struct(DataStruct {
+  let original_struct_fields = if let Data::Struct(DataStruct {
     fields: Fields::Named(FieldsNamed { ref named, .. }),
     ..
   }) = parsed_input.data
@@ -30,16 +30,39 @@ pub fn builder_macro(input: TokenStream) -> TokenStream {
     original_struct_name.span(),
   );
 
+  // Generate Option value from orignal fields
+  let trans_fields = original_struct_fields.iter().map(|field| {
+    let ident = &field.ident;
+    let ty = &field.ty;
+
+    quote! { pub #ident: Option::<#ty> }
+  });
+
+  // tạo struct field động chỗ này, init value = None
+  let none_fiels = original_struct_fields;
+
+  let trans_methods = original_struct_fields.iter().map(|field| {
+    let ident = &field.ident;
+    let ty = &field.ty;
+    let arg = Ident::new(
+      &format!("new_{}", original_struct_name),
+      original_struct_name.span(),
+    );
+
+    quote! {
+      pub fn #ident(&mut self, #arg: #ty) -> &mut Self {
+        self.#ident = Some(#arg);
+        self
+      }
+    }
+  });
+
   // Generate new tokenstream
   let expanded = quote! {
-    #[derive(Debug)]
-    pub struct #new_struct_name {
-      // #original_struct_fields
-      pub executable: Option::<String>,
-      pub args: Option::<Vec::<String>>,
-      pub env: Option::<Vec::<&'static str>>,
-      pub current_dir: Option::<Option::<String>>,
-    }
+      #[derive(Debug)]
+      pub struct #new_struct_name {
+        #(#trans_fields,)*
+      }
 
     impl #original_struct_name {
       pub fn builder() -> #new_struct_name {
@@ -53,26 +76,8 @@ pub fn builder_macro(input: TokenStream) -> TokenStream {
     }
 
     impl #new_struct_name {
-      pub fn executable(&mut self, new_executable: String) -> &mut Self {
-        self.executable = Some(new_executable);
-        self
-      }
-
-      pub fn args(&mut self, new_args: Vec::<String>) -> &mut Self {
-        self.args = Some(new_args);
-        self
-      }
-
-      pub fn env(&mut self, new_env: Vec::<&'static str>) -> &mut Self {
-        self.env = Some(new_env);
-        self
-      }
-
-      pub fn current_dir(&mut self, new_dir: Option::<String>) -> &mut Self {
-        self.current_dir = Some(new_dir);
-        self
-      }
-
+      #(#trans_methods)*
+      
       pub fn build(&self) -> Result::<#original_struct_name, String> {
         Ok(#original_struct_name{
           executable: self.executable.clone().ok_or("failed to get executable").unwrap(),
